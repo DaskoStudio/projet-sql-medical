@@ -8,6 +8,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: cabinet_medical
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./db:/docker-entrypoint-initdb.d/
