@@ -3,344 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MediPulse — Tableau de bord</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>Cabinet Médical — Consultations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --secondary: #0ea5e9;
-      --bg: #f8fafc;
-      --surface: rgba(255, 255, 255, 0.7);
-      --surface-solid: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-      --danger-bg: #fef2f2;
-      --danger-text: #991b1b;
-      --success: #10b981;
-      --success-bg: #ecfdf5;
-      --success-text: #065f46;
-    }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Outfit', sans-serif;
-      background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
-      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      background: #f4f6fb;
+      color: #1a1a2e;
       min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Ambient background blobs */
-    .bg-shape {
-      position: absolute;
-      filter: blur(80px);
-      z-index: -1;
-      opacity: 0.6;
-      border-radius: 50%;
-      animation: float 10s ease-in-out infinite;
-    }
-    .shape-1 {
-      top: -100px;
-      left: -100px;
-      width: 400px;
-      height: 400px;
-      background: rgba(79, 70, 229, 0.3);
-    }
-    .shape-2 {
-      bottom: -100px;
-      right: -100px;
-      width: 500px;
-      height: 500px;
-      background: rgba(14, 165, 233, 0.3);
-      animation-delay: -5s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(30px, -30px); }
     }
 
     /* ─── Header ─── */
     header {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,0.3);
-      padding: 1rem 2.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-    }
-    .logo-icon {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      padding: 0.5rem;
-      border-radius: 12px;
+      background: #107aca;
       color: white;
+      padding: 1.2rem 2rem;
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+      gap: 0.75rem;
+      box-shadow: 0 2px 8px rgba(16, 122, 202, 0.25);
     }
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
-    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.25rem; font-weight: 600; }
 
     /* ─── Main ─── */
     main {
-      max-width: 1000px;
-      margin: 3rem auto;
-      padding: 0 1.5rem;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
     }
 
-    .header-section {
+    .header-actions {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 2rem;
-    }
-
-    .header-section h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
-    }
-
-    .header-section p {
-      color: var(--text-muted);
-      font-size: 1rem;
-      font-weight: 400;
-    }
-
-    /* ─── Cards Grid ─── */
-    #app {
-      display: grid;
-      gap: 1.5rem;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    }
-
-    .card {
-      background: var(--surface-solid);
-      border-radius: 20px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
       gap: 1rem;
-      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
-      border: 1px solid rgba(255,255,255,0.6);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      position: relative;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(30px);
-      animation: fadeUp 0.6s forwards;
     }
 
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #64748b;
     }
 
-    .card:hover {
-      transform: translateY(-5px) scale(1.02);
-      box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.15);
-      border-color: rgba(79, 70, 229, 0.2);
-    }
-
-    /* Gradient line top of card */
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .card:hover::before { opacity: 1; }
-
-    .card-header {
+    /* ─── Filtres (Les fameuses options) ─── */
+    .filters {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      gap: 1rem;
     }
 
-    .card-date {
+    .filters input, .filters select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
       font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      outline: none;
+      font-family: inherit;
+    }
+    
+    .filters input:focus, .filters select:focus {
+      border-color: #107aca;
+      box-shadow: 0 0 0 2px rgba(16, 122, 202, 0.2);
+    }
+
+    /* ─── Cards ─── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 0.85rem;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.2s;
     }
+    .card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); }
 
-    .badge {
-      background: var(--success-bg);
-      color: var(--success-text);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.3rem 0.75rem;
-      border-radius: 999px;
-      letter-spacing: 0.5px;
-      box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
-    }
+    .card-info { display: flex; flex-direction: column; gap: 0.3rem; }
 
-    .card-body {
-      margin-top: 0.5rem;
+    .card-date {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #107aca;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
 
     .card-patient {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
+      font-size: 1.05rem;
+      font-weight: 600;
     }
 
     .card-doctor {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #64748b;
     }
 
-    .card-footer {
-      margin-top: auto;
-      padding-top: 1rem;
-      border-top: 1px solid #f1f5f9;
-      display: flex;
-      justify-content: flex-end;
+    .badge {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      margin-top: 0.15rem;
+      width: fit-content;
     }
 
     /* ─── Cancel button ─── */
     .btn-cancel {
-      background: var(--danger-bg);
-      color: var(--danger-text);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      padding: 0.6rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.85rem;
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
     }
-    .btn-cancel:hover {
-      background: var(--danger);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
-    .btn-cancel:active { transform: translateY(0); }
+    .btn-cancel:hover { background: #dc2626; transform: scale(1.03); }
+    .btn-cancel:active { transform: scale(0.97); }
 
-    /* ─── Empty & Loading state ─── */
-    .empty, .loading {
-      grid-column: 1 / -1;
+    /* ─── Empty state ─── */
+    .empty {
       text-align: center;
-      padding: 4rem 2rem;
-      background: var(--surface);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      border: 1px dashed #cbd5e1;
-      color: var(--text-muted);
+      padding: 3rem 1rem;
+      color: #94a3b8;
+      font-size: 0.95rem;
     }
-    .empty svg {
-      color: var(--primary);
-      opacity: 0.5;
-      margin-bottom: 1rem;
-    }
-    .empty p {
-      font-size: 1.1rem;
-      font-weight: 500;
+    .empty svg { margin-bottom: 1rem; }
+
+    /* ─── Loading ─── */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #94a3b8;
     }
 
     /* ─── Toast ─── */
     .toast {
       position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: white;
-      color: var(--text-main);
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      border-left: 4px solid var(--success);
-      transform: translateX(120%);
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #16a34a;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(100px);
       opacity: 0;
-      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      transition: all 0.3s ease;
     }
-    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.show { transform: translateY(0); opacity: 1; }
 
-    @media (max-width: 768px) {
-      #app { grid-template-columns: 1fr; }
-      .header-section { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    @media (max-width: 600px) {
+      .card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+      .btn-cancel { align-self: flex-end; }
+      .filters { width: 100%; flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <!-- Background ambient blobs -->
-  <div class="bg-shape shape-1"></div>
-  <div class="bg-shape shape-2"></div>
-
   <header>
-    <div class="logo-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-      </svg>
-    </div>
-    <h1>MediPulse</h1>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+    </svg>
+    <h1>Cabinet Médical</h1>
   </header>
 
   <main>
-    <div class="header-section">
-      <div>
-        <h2>Tableau de bord</h2>
-        <p>Gérez vos rendez-vous médicaux avec élégance.</p>
+    <div class="header-actions">
+      <p class="subtitle">Consultations à venir</p>
+      
+      <!-- Ajout des fonctionnalités -->
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Rechercher patient ou médecin..." oninput="filterConsultations()">
+        <select id="statusFilter" onchange="filterConsultations()">
+          <option value="all">Tous les statuts</option>
+          <option value="planifié">Planifié</option>
+          <option value="annulé">Annulé</option>
+          <option value="terminé">Terminé</option>
+        </select>
       </div>
     </div>
-    
+
     <div id="app">
-      <div class="loading">
-        <svg class="animate-spin" style="animation: spin 1s linear infinite; width: 32px; height: 32px; margin: 0 auto 1rem;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle>
-          <path class="opacity-75" fill="var(--primary)" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p>Synchronisation en cours…</p>
-      </div>
+      <div class="loading">Chargement…</div>
     </div>
   </main>
 
-  <div class="toast" id="toast">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-    <span id="toast-msg">Action réussie</span>
-  </div>
-
-  <style>
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+  <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
 </body>
