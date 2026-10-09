@@ -18,7 +18,7 @@
 
 - **Ce qu'il fait :** accélère la page d'accueil du site, qui affiche les 100 premiers rendez-vous triés par date.
 - **Pourquoi il est là :** sans index, PostgreSQL lit et trie 1 million de lignes pour n'en garder que 100. L'index est déjà trié : il lit les 100 premières entrées et s'arrête.
-- **La preuve :** la requête de la page d'accueil. Avant : Seq Scan, 446 ms. Après : Index Scan, 0,6 ms.
+- **La preuve :** la requête de la page d'accueil. Avant : Seq Scan, 82 ms. Après : Index Scan, 0,13 ms.
 
 ## Index 2 : `consultations (medecin_id, date_heure)`
 
@@ -27,7 +27,7 @@
   - `medecin_id` est une clé étrangère, et PostgreSQL ne l'indexe pas tout seul.
   - La fonction filtre sur le médecin, puis sur une période. L'index est rangé dans cet ordre : il va directement au médecin, puis lit ses rendez-vous du mois.
 - **La preuve :**
-  - Le calcul pour un médecin. Avant : Seq Scan, 49 ms. Après : Index Only Scan, 0,15 ms.
-  - La page statistiques, qui fait ce calcul pour les 200 médecins. Avant : 17,7 s. Après : 0,1 s.
+  - Le calcul pour un médecin. Avant : Seq Scan, 10,9 ms. Après : Index Only Scan, 0,06 ms.
+  - La page statistiques, qui fait ce calcul pour les 200 médecins. Avant : 6,0 s. Après : 27 ms.
 
 **Le coût :** les deux index occupent 6,7 Mo et 30 Mo, et chaque nouveau rendez-vous doit les mettre à jour. On consulte un agenda bien plus souvent qu'on ne prend rendez-vous : le compromis est rentable.
