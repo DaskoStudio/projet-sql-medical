@@ -19,6 +19,11 @@ const pool = new Pool({
   database: "cabinet_medical",
 });
 
+// Empêcher l'application Node de planter si la DB redémarre
+pool.on('error', (err) => {
+  console.error('Erreur inattendue sur le client PostgreSQL', err);
+});
+
 // GET — Consultations à venir (avec nom médecin + patient)
 app.get("/api/consultations", async (req, res) => {
   try {
