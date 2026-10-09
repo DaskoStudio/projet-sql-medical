@@ -4,236 +4,473 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cabinet Médical — Consultations</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #f4f6fb;
+      background: #f0f4fa;
       color: #1a1a2e;
       min-height: 100vh;
     }
 
     /* ─── Header ─── */
     header {
-      background: #107aca;
+      background: linear-gradient(135deg, #1282d5 0%, #0a68b4 50%, #085da2 100%);
       color: white;
-      padding: 1.2rem 2rem;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(10, 104, 180, 0.35);
+    }
+
+    .header-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      box-shadow: 0 2px 8px rgba(16, 122, 202, 0.25);
+      justify-content: space-between;
     }
-    header svg { flex-shrink: 0; }
-    header h1 { font-size: 1.25rem; font-weight: 600; }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .header-logo {
+      width: 34px;
+      height: 34px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    header h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-right {
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.7;
+    }
 
     /* ─── Main ─── */
     main {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 0 1rem;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 3rem;
     }
 
-    .header-actions {
+    /* ─── Hero stat row ─── */
+    .stat-row-hero {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: white;
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      transition: transform 0.2s;
+    }
+    .stat-box:hover { transform: translateY(-2px); }
+
+    .stat-box .stat-number {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .stat-box .stat-number.blue   { color: #107aca; }
+    .stat-box .stat-number.green  { color: #16a34a; }
+    .stat-box .stat-number.orange { color: #f59e0b; }
+
+    .stat-box .stat-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.3rem;
+    }
+
+    /* ─── Section ─── */
+    .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
-    .subtitle {
+    .section-title {
       font-size: 0.95rem;
-      color: #64748b;
-    }
-
-    /* ─── Filtres (Les fameuses options) ─── */
-    .filters {
+      font-weight: 700;
+      color: #1e293b;
       display: flex;
-      gap: 1rem;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .filters input, .filters select {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 0.85rem;
+    .section-title .dot {
+      width: 8px;
+      height: 8px;
+      background: #107aca;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .search-box input {
+      padding: 0.5rem 0.75rem 0.5rem 2.1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.8rem;
       outline: none;
       font-family: inherit;
-    }
-    
-    .filters input:focus, .filters select:focus {
-      border-color: #107aca;
-      box-shadow: 0 0 0 2px rgba(16, 122, 202, 0.2);
+      background: white;
+      color: #334155;
+      width: 200px;
+      transition: all 0.25s;
     }
 
+    .search-box input:focus {
+      border-color: #107aca;
+      box-shadow: 0 0 0 3px rgba(16,122,202,0.1);
+      width: 240px;
+    }
+
+    .search-box input::placeholder { color: #b8c5d3; }
+
     /* ─── Cards ─── */
+    .cards-list { display: flex; flex-direction: column; gap: 0.55rem; }
+
     .card {
       background: white;
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 0.85rem;
+      border-radius: 14px;
+      padding: 0;
+      display: flex;
+      align-items: stretch;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02);
+      transition: all 0.25s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+      animation: slideUp 0.4s ease both;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-accent {
+      width: 5px;
+      background: linear-gradient(180deg, #3b9fe8, #107aca);
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      flex: 1;
+      padding: 1rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-      transition: box-shadow 0.2s;
+      gap: 1rem;
     }
-    .card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); }
 
-    .card-info { display: flex; flex-direction: column; gap: 0.3rem; }
-
-    .card-date {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #107aca;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      min-width: 0;
     }
+
+    .card-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: white;
+      background: linear-gradient(135deg, #107aca, #0b5fa5);
+    }
+
+    .card-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 
     .card-patient {
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .card-doctor {
-      font-size: 0.85rem;
+    .card-meta {
+      font-size: 0.75rem;
       color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
     }
 
-    .badge {
-      display: inline-block;
-      background: #e0f2fe;
-      color: #0369a1;
-      font-size: 0.7rem;
+    .card-meta svg { flex-shrink: 0; color: #94a3b8; }
+
+    .card-tag {
+      font-size: 0.65rem;
       font-weight: 600;
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-      margin-top: 0.15rem;
-      width: fit-content;
+      padding: 0.12rem 0.45rem;
+      border-radius: 6px;
+      background: #eef4fd;
+      color: #107aca;
     }
 
     /* ─── Cancel button ─── */
     .btn-cancel {
-      background: #ef4444;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
       color: white;
       border: none;
-      padding: 0.55rem 1.1rem;
-      border-radius: 8px;
-      font-size: 0.82rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.76rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s;
       flex-shrink: 0;
+      white-space: nowrap;
     }
-    .btn-cancel:hover { background: #dc2626; transform: scale(1.03); }
-    .btn-cancel:active { transform: scale(0.97); }
-
-    /* ─── Empty state ─── */
-    .empty {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: #94a3b8;
-      font-size: 0.95rem;
+    .btn-cancel:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 14px rgba(239,68,68,0.35);
     }
-    .empty svg { margin-bottom: 1rem; }
+    .btn-cancel:active { transform: scale(0.95); }
 
-    /* ─── Layout & Stats ─── */
-    .dashboard {
+    /* ─── Voir plus ─── */
+    .btn-more {
+      display: block;
+      margin: 1.1rem auto 0;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      color: #475569;
+      padding: 0.55rem 1.8rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-more:hover {
+      border-color: #107aca;
+      color: #107aca;
+      box-shadow: 0 2px 8px rgba(16,122,202,0.1);
+    }
+
+    /* ─── Médecins ─── */
+    .docs-section { margin-top: 2.25rem; }
+
+    .docs-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1.5rem;
-      align-items: start;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.6rem;
+      margin-top: 0.85rem;
     }
-    .stats-card {
+
+    .doc-chip {
       background: white;
       border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    }
-    .stats-card h3 {
-      font-size: 1rem;
-      color: #107aca;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .stat-row {
+      padding: 0.75rem 1rem;
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-      font-size: 0.9rem;
+      align-items: center;
+      gap: 0.7rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: transform 0.2s;
     }
-    .stat-row strong { color: #16a34a; }
+    .doc-chip:hover { transform: translateY(-1px); }
 
-    /* ─── Loading ─── */
+    .doc-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: white;
+      flex-shrink: 0;
+    }
+    .doc-avatar.rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .doc-avatar.rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .doc-avatar.rank-3 { background: linear-gradient(135deg, #b45309, #92400e); }
+    .doc-avatar.rank-other { background: #e2e8f0; color: #64748b; }
+
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .doc-spec {
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+
+    .doc-count {
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .doc-count.active { background: #dcfce7; color: #15803d; }
+    .doc-count.zero   { background: #f1f5f9; color: #cbd5e1; }
+
+    /* ─── Empty / Loading ─── */
+    .empty {
+      text-align: center;
+      padding: 3.5rem 1rem;
+      color: #94a3b8;
+    }
+    .empty svg { margin-bottom: 0.6rem; opacity: 0.35; }
+    .empty p { font-size: 0.88rem; }
+
     .loading {
       text-align: center;
-      padding: 3rem;
-      color: #94a3b8;
+      padding: 2.5rem;
+      color: #b0bec5;
+      font-size: 0.82rem;
     }
 
     /* ─── Toast ─── */
     .toast {
       position: fixed;
       bottom: 1.5rem;
-      right: 1.5rem;
-      background: #16a34a;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e293b;
       color: white;
-      padding: 0.75rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: translateY(100px);
+      padding: 0.65rem 1.4rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.2);
       opacity: 0;
-      transition: all 0.3s ease;
+      transition: all 0.35s cubic-bezier(.4,0,.2,1);
+      z-index: 200;
     }
-    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
 
-    @media (max-width: 600px) {
-      .card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    /* ─── Responsive ─── */
+    @media (max-width: 640px) {
+      .stat-row-hero { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+      .stat-box { padding: 0.75rem 0.6rem; }
+      .stat-box .stat-number { font-size: 1.3rem; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 0.65rem; }
+      .search-box input { width: 100%; }
+      .search-box input:focus { width: 100%; }
+      .search-box { width: 100%; }
+      .card-body { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
       .btn-cancel { align-self: flex-end; }
-      .filters { width: 100%; flex-direction: column; }
+      header .header-inner { padding: 0.85rem 1rem; }
+      main { padding: 1.25rem 1rem 2.5rem; }
+      .docs-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <header>
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-    </svg>
-    <h1>Cabinet Médical</h1>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h1>Cabinet Médical</h1>
+      </div>
+      <div class="header-right" id="header-date"></div>
+    </div>
   </header>
 
   <main>
-    <div class="header-actions">
-      <p class="subtitle">Consultations à venir</p>
-      
-      <!-- Ajout des fonctionnalités -->
-      <div class="filters">
-        <input type="text" id="searchInput" placeholder="Rechercher patient ou médecin..." oninput="filterConsultations()">
-        <select id="statusFilter" onchange="filterConsultations()">
-          <option value="all">Tous les statuts</option>
-          <option value="planifié">Planifié</option>
-          <option value="annulé">Annulé</option>
-          <option value="terminé">Terminé</option>
-        </select>
+    <!-- Stat boxes -->
+    <div class="stat-row-hero">
+      <div class="stat-box">
+        <div class="stat-number blue" id="stat-total">–</div>
+        <div class="stat-label">À venir</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number green" id="stat-today">–</div>
+        <div class="stat-label">Aujourd'hui</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number orange" id="stat-week">–</div>
+        <div class="stat-label">Cette semaine</div>
       </div>
     </div>
 
-    <div class="dashboard">
-      <div id="app">
-        <div class="loading">Chargement des consultations…</div>
+    <!-- Liste -->
+    <div class="section-header">
+      <h2 class="section-title"><span class="dot"></span> Prochains rendez-vous</h2>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Rechercher…" oninput="filterConsultations()">
       </div>
-      
-      <div class="stats-card">
-        <h3>Top Médecins du mois (Volume)</h3>
-        <div id="stats-container">
-          <div class="loading">Chargement des stats…</div>
-        </div>
+    </div>
+
+    <div id="app" class="cards-list">
+      <div class="loading">Chargement…</div>
+    </div>
+    <div id="more-container"></div>
+
+    <!-- Médecins -->
+    <div class="docs-section">
+      <h2 class="section-title"><span class="dot"></span> Médecins du mois</h2>
+      <div class="docs-grid" id="stats-container">
+        <div class="loading">Chargement…</div>
       </div>
     </div>
   </main>
