@@ -1,4 +1,4 @@
--- Personne 3 : mesure de chaque requête avant et après son index.
+-- mesure de chaque requête avant et après son index.
 -- Chaque mesure est lancée deux fois : on garde la seconde.
 
 DROP INDEX IF EXISTS consultations_date_idx;
