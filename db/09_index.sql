@@ -1,7 +1,7 @@
--- Personne 3 : les deux index (mesures dans analyse/benchmark_index.sql)
+-- les deux index (mesures dans analyse/benchmark_index.sql)
 
--- Le planning d'une journée
+-- Le planning trié par date (page d'accueil du site)
 CREATE INDEX consultations_date_idx ON consultations (date_heure);
 
--- L'agenda d'un médecin (clé étrangère, non indexée par PostgreSQL)
-CREATE INDEX consultations_medecin_idx ON consultations (medecin_id);
+-- L'agenda d'un médecin sur une période (page statistiques, calculer_rdv_mois)
+CREATE INDEX consultations_medecin_date_idx ON consultations (medecin_id, date_heure);

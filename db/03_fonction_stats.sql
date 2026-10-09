@@ -1,4 +1,4 @@
--- Personne 3 : nombre de rendez-vous non annulés d'un médecin sur un mois.
+--nombre de rendez-vous non annulés d'un médecin sur un mois.
 -- p_mois = le 1er jour du mois, ex : SELECT calculer_rdv_mois(42, '2026-12-01');
 
 CREATE OR REPLACE FUNCTION calculer_rdv_mois(p_medecin_id int, p_mois date)
