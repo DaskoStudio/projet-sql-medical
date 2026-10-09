@@ -1,4 +1,4 @@
-# Partie Personne 3 : données, fonction, index
+# Partie de données, fonction, index
 
 *(Sections à recopier dans le `README.md` du groupe.)*
 
