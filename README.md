@@ -54,10 +54,11 @@ Le projet est divisé en 3 rôles distincts pour couvrir l'ensemble des concepts
 - Création de la **procédure stockée** d'annulation de rendez-vous avec libération du créneau (`03_procedures.sql`).
 - Développement du backend Node.js et de l'interface graphique.
 
-### 👤 Personne 2 : Analyste & Sécurité (À faire ⏳)
-- Création de **vues SQL** pour les requêtes complexes (ex: tableau de bord journalier des médecins, historique des patients).
-- Mise en place de **Triggers** pour automatiser la gestion (ex: table d'audit pour tracer qui annule quoi et quand).
-- Ajout d'Index pour optimiser les requêtes lourdes (si nécessaire).
+### 👤 Personne 2 : Analyste & Sécurité (Déjà fait ✅)
+- Génération d'un volume de données réaliste (100 000 consultations) pour tester les performances (`02_donnees_volume.sql`).
+- Création de la fonction `calculer_rdv_mois` pour calculer dynamiquement les statistiques mensuelles par médecin (`03_fonction_stats.sql`).
+- Création d'**Index** sur les colonnes `date_heure` et `medecin_id` pour optimiser les requêtes lourdes (`09_index.sql`).
+*(Ces statistiques ont été intégrées à l'API et à l'interface !)*
 
 ### 👤 Personne 3 : Expert Optimisation & DBA (À faire ⏳)
 - Mise en place de la **Recherche Full-Text** (recherche rapide d'un patient par nom/prénom).
