@@ -113,5 +113,30 @@ window.annuler = async function(id) {
   }
 }
 
+// ─── Charger les stats (Personne 2) ───
+async function loadStats() {
+  const container = document.getElementById("stats-container");
+  try {
+    const res = await fetch(`${API}/stats`);
+    const data = await res.json();
+    
+    if (data.length === 0) {
+      container.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">Aucune donnée</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(m => `
+      <div class="stat-row">
+        <span>Dr. ${m.nom}</span>
+        <strong>${m.rdv_ce_mois} RDV</strong>
+      </div>
+    `).join("");
+  } catch (err) {
+    container.innerHTML = '<p style="color: #ef4444; font-size: 0.9rem;">Erreur de connexion</p>';
+    console.error(err);
+  }
+}
+
 // ─── Init ───
 loadConsultations();
+loadStats();

@@ -34,9 +34,29 @@ app.get("/api/consultations", async (req, res) => {
       FROM consultations c
       JOIN medecins m ON c.medecin_id = m.id
       JOIN patients p ON c.patient_id = p.id
-      WHERE c.date_heure >= NOW()
-        AND c.statut = 'planifié'
       ORDER BY c.date_heure ASC
+      LIMIT 100
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// GET — Statistiques par médecin pour le mois en cours
+app.get("/api/stats", async (req, res) => {
+  try {
+    // On utilise la fonction SQL 'calculer_rdv_mois' créée par Personne 2
+    const result = await pool.query(`
+      SELECT 
+        id, 
+        nom, 
+        specialite, 
+        calculer_rdv_mois(id, date_trunc('month', current_date)::date) as rdv_ce_mois
+      FROM medecins
+      ORDER BY rdv_ce_mois DESC
+      LIMIT 10;
     `);
     res.json(result.rows);
   } catch (err) {

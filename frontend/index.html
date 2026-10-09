@@ -140,6 +140,34 @@
     }
     .empty svg { margin-bottom: 1rem; }
 
+    /* ─── Layout & Stats ─── */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    .stats-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+    .stats-card h3 {
+      font-size: 1rem;
+      color: #107aca;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .stat-row strong { color: #16a34a; }
+
     /* ─── Loading ─── */
     .loading {
       text-align: center;
@@ -196,8 +224,17 @@
       </div>
     </div>
 
-    <div id="app">
-      <div class="loading">Chargement…</div>
+    <div class="dashboard">
+      <div id="app">
+        <div class="loading">Chargement des consultations…</div>
+      </div>
+      
+      <div class="stats-card">
+        <h3>Top Médecins du mois (Volume)</h3>
+        <div id="stats-container">
+          <div class="loading">Chargement des stats…</div>
+        </div>
+      </div>
     </div>
   </main>
 
