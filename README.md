@@ -50,20 +50,23 @@ Le projet est divisé en 3 rôles distincts pour couvrir l'ensemble des concepts
 
 ### 👤 Personne 1 : Architecte & Développeur Lead (Déjà fait ✅)
 - Conception du modèle conceptuel (MLD) et création des tables (`01_schema.sql`).
-- Génération d'un jeu de données réaliste (`02_donnees.sql`).
+- Jeu de données de base de démonstration (`02_donnees.sql`).
 - Création de la **procédure stockée** d'annulation de rendez-vous avec libération du créneau (`03_procedures.sql`).
-- Développement du backend Node.js et de l'interface graphique.
+- Développement du backend Node.js, API REST et architecture de base.
 
-### 👤 Personne 2 : Analyste & Sécurité (Déjà fait ✅)
-- Génération d'un volume de données réaliste (100 000 consultations) pour tester les performances (`02_donnees_volume.sql`).
-- Création de la fonction `calculer_rdv_mois` pour calculer dynamiquement les statistiques mensuelles par médecin (`03_fonction_stats.sql`).
-- Création d'**Index** sur les colonnes `date_heure` et `medecin_id` pour optimiser les requêtes lourdes (`09_index.sql`).
-*(Ces statistiques ont été intégrées à l'API et à l'interface !)*
+### 👤 Personne 2 : Analyste Données & Performances (Déjà fait ✅)
+- Génération d'un volume de données réaliste (1 000 000 consultations, 10 000 patients, 200 médecins) (`02_donnees_volume.sql`).
+- Fonction PL/pgSQL `calculer_rdv_mois` pour calculer dynamiquement le volume d'activité mensuelle par médecin (`03_fonction_stats.sql`).
+- Création d'**Index B-Tree** ciblés sur `date_heure` et `medecin_id` divisant le temps de calcul par 10 (`09_index.sql`).
+- Rédaction du rapport de benchmark et des plans d'exécution `EXPLAIN ANALYZE` (`analyse/README.md`).
 
-### 👤 Personne 3 : Expert Optimisation & DBA (À faire ⏳)
-- Mise en place de la **Recherche Full-Text** (recherche rapide d'un patient par nom/prénom).
-- Création de **vues matérialisées** pour optimiser les calculs statistiques mensuels/annuels.
-- Partitionnement des tables (si le volume de données le justifie) et mise en place d'une routine de Backup.
+### 👤 Personne 3 : Sécurité, Rôles & Intégrité Métier (Déjà fait ✅)
+- **Contrôle d'accès basé sur les rôles (RBAC) :** Définition des rôles `role_secretaire`, `role_medecin` et création des comptes `secretaire_demo` et `medecin_demo` (`04_securite.sql`).
+- **Vues sécurisées (Principe du moindre privilège) :** 
+  - `vue_secretaire` : affiche le planning, les coordonnées et le cabinet tout en masquant les informations médicales sensibles avec `GRANT SELECT`.
+  - `vue_medecin` : affiche le planning spécifique au praticien.
+- **Trigger d'intégrité métier :** `anti_surreservation` (`verifier_surreservation()`) bloquant au niveau du moteur PostgreSQL toute tentative de double réservation sur un même créneau pour un même praticien.
+- *(Toutes ces fonctionnalités sont reliées et testables en direct depuis l'interface web !)*
 
 ---
 
@@ -71,21 +74,28 @@ Le projet est divisé en 3 rôles distincts pour couvrir l'ensemble des concepts
 
 ```text
 projet-sql-medical/
-├── docker-compose.yml       # Configuration du conteneur PostgreSQL
-├── README.md                # Documentation du projet
+├── docker-compose.yml       # Configuration du conteneur PostgreSQL 16 (port 5433)
+├── README.md                # Documentation complète du projet
 │
-├── db/                      # Scripts SQL (exécutés au build du conteneur)
-│   ├── 01_schema.sql        # Création des tables (Personne 1)
-│   ├── 02_donnees.sql       # Données de base (Personne 1)
-│   └── 03_procedures.sql    # Procédures stockées (Personne 1)
-│   # Les prochains fichiers SQL iront ici (04_vues.sql, 05_triggers.sql...)
+├── db/                      # Scripts SQL (exécutés automatiquement par Docker)
+│   ├── 01_schema.sql        # Schéma relationnel (Personne 1)
+│   ├── 02_donnees.sql       # Données de test initiales (Personne 1)
+│   ├── 02_donnees_volume.sql# Générateur de 1 000 000 consultations (Personne 2)
+│   ├── 03_procedures.sql    # Procédure stockée annuler_rdv (Personne 1)
+│   ├── 03_fonction_stats.sql# Fonction de calcul mensuel (Personne 2)
+│   ├── 04_securite.sql      # Rôles, vues sécurisées et trigger anti-surréservation (Personne 3)
+│   └── 09_index.sql         # Index d'optimisation de requêtes (Personne 2)
 │
-├── backend/                 # API Node.js / Express
-│   ├── index.js             # Routes et connexion DB
+├── analyse/                 # Benchmarks de performance (Personne 2)
+│   ├── README.md            # Rapport d'analyse et résultats EXPLAIN ANALYZE
+│   └── benchmark_index.sql  # Requêtes de test avec et sans index
+│
+├── backend/                 # API REST Node.js & Express
+│   ├── index.js             # Routes, procédures stockées, triggers et contrôle RBAC
 │   ├── package.json
 │   └── package-lock.json
 │
-└── frontend/                # Interface Utilisateur
-    ├── index.html           # Structure de la page et CSS
-    └── app.js               # Logique d'affichage et appels à l'API
+└── frontend/                # Interface Utilisateur Web
+    ├── index.html           # Dashboard, modales de prise de RDV et diagnostic RBAC
+    └── app.js               # Logique interactive et gestion des réponses d'erreurs SQL
 ```
