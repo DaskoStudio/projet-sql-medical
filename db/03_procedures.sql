@@ -1,3 +1,9 @@
+-- ═══════════════════════════════════════════════════════════
+-- PSG MEDICAL HUB — Procédure stockée : annulation de RDV
+-- Passe le statut d'une consultation de 'planifié' à 'annulé'.
+-- Utilisable par l'interface web ou directement via psql.
+-- ═══════════════════════════════════════════════════════════
+
 CREATE OR REPLACE PROCEDURE annuler_rdv(p_consultation_id INT)
 LANGUAGE plpgsql
 AS $$

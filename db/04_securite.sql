@@ -1,3 +1,9 @@
+-- ═══════════════════════════════════════════════════════════
+-- PSG MEDICAL HUB — Trigger anti-surréservation + Rôles & Vues
+-- ═══════════════════════════════════════════════════════════
+
+-- ─── TRIGGER : empêcher deux consultations même médecin, même heure ───
+
 CREATE FUNCTION verifier_surreservation()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -11,7 +17,7 @@ BEGIN
           AND statut <> 'annulé'
     ) THEN
         RAISE EXCEPTION
-        'Le médecin % a déjà un rendez-vous à cette heure',
+        'Le médecin % a déjà un rendez-vous à cette heure — créneau refusé par le trigger anti_surreservation',
         NEW.medecin_id;
     END IF;
 
@@ -24,6 +30,8 @@ BEFORE INSERT ON consultations
 FOR EACH ROW
 EXECUTE FUNCTION verifier_surreservation();
 
+-- ─── RÔLES PostgreSQL ───
+
 CREATE ROLE role_secretaire NOLOGIN;
 CREATE ROLE role_medecin NOLOGIN;
 
@@ -34,6 +42,8 @@ IN ROLE role_secretaire;
 CREATE ROLE medecin_demo
 LOGIN PASSWORD 'medecin'
 IN ROLE role_medecin;
+
+-- ─── VUE SECRÉTAIRE : masque le numéro de sécu ───
 
 CREATE VIEW vue_secretaire AS
 SELECT
@@ -52,6 +62,8 @@ JOIN patients p ON p.id = c.patient_id
 JOIN medecins m ON m.id = c.medecin_id
 JOIN cabinets ca ON ca.id = m.cabinet_id;
 GRANT SELECT ON vue_secretaire TO role_secretaire;
+
+-- ─── VUE MÉDECIN : accès limité à son propre planning ───
 
 CREATE VIEW vue_medecin AS
 SELECT

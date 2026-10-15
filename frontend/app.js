@@ -1,372 +1,395 @@
-const API = "http://localhost:3000/api";
-const app = document.getElementById("app");
-const toast = document.getElementById("toast");
+const API = 'http://localhost:3000/api';
+let data = [], view = 'main';
 
-let allConsultations = [];
-let upcoming = [];
-let visibleCount = 5;
-let currentView = "standard"; // 'standard' ou 'secretaire'
-let patientsList = [];
-let medecinsList = [];
-
-// ─── Helpers ───
-
-function formatDate(iso) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  return { date, time };
-}
-
-function initials(prenom, nom) {
-  if (!prenom && !nom) return "??";
-  return ((prenom ? prenom[0] : "") + (nom ? nom[0] : "")).toUpperCase();
-}
-
-function docName(nom) {
-  if (!nom) return "Dr. Inconnu";
-  return nom.startsWith("Dr") ? nom : `Dr. ${nom}`;
-}
-
-function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3500);
-}
-
-function isToday(d) {
-  const now = new Date();
-  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-}
-
-function isThisWeek(d) {
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay() + 1);
-  start.setHours(0,0,0,0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 7);
-  return d >= start && d < end;
-}
-
-// ─── Header date ───
-(function setHeaderDate() {
-  const el = document.getElementById("header-date");
-  if (!el) return;
-  const now = new Date();
-  el.textContent = now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-})();
-
-// ─── Stats boxes ───
-
-function updateStatBoxes() {
-  const now = new Date();
-  const todayCount = upcoming.filter(c => isToday(new Date(c.date_heure))).length;
-  const weekCount = upcoming.filter(c => isThisWeek(new Date(c.date_heure))).length;
-
-  document.getElementById("stat-total").textContent = upcoming.length;
-  document.getElementById("stat-today").textContent = todayCount;
-  document.getElementById("stat-week").textContent = weekCount;
-}
-
-// ─── Render cards ───
-
-function renderConsultations(data) {
-  const moreContainer = document.getElementById("more-container");
-
-  if (data.length === 0) {
-    app.innerHTML = `
-      <div class="empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <p>Aucune consultation trouvée</p>
-      </div>`;
-    moreContainer.innerHTML = "";
-    return;
-  }
-
-  const visible = data.slice(0, visibleCount);
-
-  app.innerHTML = visible
-    .map((c, i) => {
-      const { date, time } = formatDate(c.date_heure);
-      const ini = initials(c.patient_prenom, c.patient_nom);
-      const id = c.id || c.consultation_id;
-      const medecin = c.medecin_nom || c.medecin || "Médecin";
-      const cabinetBadge = c.cabinet ? `<span class="card-tag" style="background:#f1f5f9;color:#475569;">📍 ${c.cabinet} (${c.ville})</span>` : "";
-
-      return `
-    <div class="card" style="animation-delay:${i * 0.05}s">
-      <div class="card-accent"></div>
-      <div class="card-body">
-        <div class="card-left">
-          <div class="card-avatar">${ini}</div>
-          <div class="card-info">
-            <span class="card-patient">${c.patient_prenom || ""} ${c.patient_nom || ""}</span>
-            <span class="card-meta">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              ${date} · ${time}
-              <span class="card-tag">${docName(medecin)} · ${c.specialite || "Généraliste"}</span>
-              ${cabinetBadge}
-            </span>
-          </div>
-        </div>
-        ${c.statut === "planifié" ? `<button class="btn-cancel" onclick="annuler(${id})">Annuler</button>` : `<span class="card-tag" style="background:#fee2e2;color:#b91c1c;">Annulé</span>`}
-      </div>
-    </div>`;
-    })
-    .join("");
-
-  if (data.length > visibleCount) {
-    const remaining = data.length - visibleCount;
-    moreContainer.innerHTML = `<button class="btn-more" onclick="showMore()">Voir ${remaining} autre${remaining > 1 ? "s" : ""}</button>`;
-  } else {
-    moreContainer.innerHTML = "";
-  }
-}
-
-// ─── Show more ───
-
-window.showMore = function () {
-  visibleCount += 10;
-  filterConsultations();
+const PSG = {
+    'Dembélé':     { num:10, pos:'ATT', rating:88 },
+    'Hakimi':      { num:2,  pos:'DEF', rating:86 },
+    'Donnarumma':  { num:99, pos:'GK',  rating:89 },
+    'Marquinhos':  { num:5,  pos:'DEF', rating:87 },
+    'Vitinha':     { num:17, pos:'MIL', rating:85 },
+    'Zaïre-Emery': { num:33, pos:'MIL', rating:83 },
+    'Barcola':     { num:29, pos:'ATT', rating:82 },
+    'Kolo Muani':  { num:23, pos:'ATT', rating:84 }
 };
 
-// ─── Filter ───
+document.addEventListener('DOMContentLoaded', () => {
+    load();
+    initStadium();
+    initParticles();
+    initScrollReveal();
+});
 
-window.filterConsultations = function () {
-  const search = document.getElementById("searchInput").value.toLowerCase().trim();
-
-  const filtered = upcoming.filter(c => {
-    if (!search) return true;
-    const patNom = (c.patient_nom || "").toLowerCase();
-    const patPre = (c.patient_prenom || "").toLowerCase();
-    const docNom = (c.medecin_nom || c.medecin || "").toLowerCase();
-    const spec = (c.specialite || "").toLowerCase();
-    const cab = (c.cabinet || "").toLowerCase();
-
-    return patNom.includes(search) || patPre.includes(search) || docNom.includes(search) || spec.includes(search) || cab.includes(search);
-  });
-
-  renderConsultations(filtered);
-};
-
-// ─── Switch View (Standard vs Secrétaire) ───
-
-window.switchView = function(view) {
-  currentView = view;
-  document.getElementById("tab-standard").classList.toggle("active", view === "standard");
-  document.getElementById("tab-secretaire").classList.toggle("active", view === "secretaire");
-  
-  const titleEl = document.getElementById("section-title-text");
-  if (view === "secretaire") {
-    titleEl.textContent = "Vue Secrétaire (Données filtrées vue_secretaire)";
-  } else {
-    titleEl.textContent = "Prochains rendez-vous (Vue Standard)";
-  }
-
-  loadConsultations();
-};
-
-// ─── Load consultations ───
-
-async function loadConsultations() {
-  app.innerHTML = '<div class="loading">Chargement des données…</div>';
-  try {
-    const endpoint = currentView === "secretaire" ? `${API}/secretaire/consultations` : `${API}/consultations`;
-    const res = await fetch(endpoint);
-    allConsultations = await res.json();
-
-    const now = new Date();
-    upcoming = allConsultations.filter(c => c.statut === "planifié" && new Date(c.date_heure) >= now);
-
-    // Si pas de RDV futurs, afficher tout de même les consultations disponibles
-    if (upcoming.length === 0) {
-      upcoming = allConsultations.slice(0, 30);
-    }
-
-    updateStatBoxes();
-    visibleCount = 5;
-    filterConsultations();
-  } catch (err) {
-    app.innerHTML = '<div class="empty"><p>Erreur de connexion au serveur</p></div>';
-    console.error(err);
-  }
+async function load() {
+    try {
+        const r = await fetch(API + '/consultations');
+        data = await r.json();
+        renderTable(data);
+        loadStats();
+        loadPlayers();
+    } catch(e) { console.error(e); }
 }
 
-// ─── Cancel ───
-
-window.annuler = async function (id) {
-  if (!confirm("Voulez-vous vraiment annuler cette consultation ?")) return;
-  try {
-    const res = await fetch(`${API}/consultations/${id}/annuler`, { method: "POST" });
-    if (res.ok) {
-      showToast("✓ Consultation annulée avec succès");
-      loadConsultations();
-      loadStats();
-    } else {
-      const data = await res.json();
-      alert(data.error || "Erreur lors de l'annulation");
-    }
-  } catch (err) {
-    alert("Erreur de connexion au serveur");
-  }
-};
-
-// ─── Load stats (Personne 2) ───
+function renderTable(items) {
+    if (!items) return;
+    const tbody = document.getElementById('tbody');
+    const counter = document.getElementById('consult-count');
+    if (counter) counter.textContent = '(' + items.length + ')';
+    tbody.innerHTML = items.map(c => {
+        const st = c.statut || 'planifié';
+        const cls = st.includes('annul') ? 'badge-annule' : st.includes('termin') ? 'badge-termine' : 'badge-planifie';
+        const d = new Date(c.date_consultation).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const patient = c.patient_nom ? (c.patient_prenom||'') + ' ' + c.patient_nom : (c.patient||'--');
+        const medecin = c.medecin_nom || c.medecin || '--';
+        const lieu = c.cabinet_nom || c.lieu || '--';
+        const canCancel = st.includes('planifi');
+        return '<tr>' +
+            '<td>' + patient.trim() + '</td>' +
+            '<td>' + medecin + '</td>' +
+            '<td>' + d + '</td>' +
+            '<td>' + lieu + '</td>' +
+            '<td><span class="badge ' + cls + '">' + st + '</span></td>' +
+            '<td>' + (canCancel ? '<button class="btn-annuler" onclick="annuler(' + c.id + ')">Annuler</button>' : '') + '</td>' +
+        '</tr>';
+    }).join('');
+}
 
 async function loadStats() {
-  const container = document.getElementById("stats-container");
-  try {
-    const res = await fetch(`${API}/stats`);
-    const data = await res.json();
-
-    if (data.length === 0) {
-      container.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem">Aucune donnée</p>';
-      return;
-    }
-
-    const sorted = data.sort((a, b) => b.rdv_ce_mois - a.rdv_ce_mois);
-
-    container.innerHTML = sorted
-      .map((m, i) => {
-        const rank = m.rdv_ce_mois > 0 ? (i < 3 ? `rank-${i + 1}` : "rank-other") : "rank-other";
-        const medal = i === 0 && m.rdv_ce_mois > 0 ? "🥇" : i === 1 && m.rdv_ce_mois > 0 ? "🥈" : i === 2 && m.rdv_ce_mois > 0 ? "🥉" : "";
-        const ini = m.nom.replace(/^Dr\.?\s*/i, "").substring(0, 2).toUpperCase();
-        return `
-      <div class="doc-chip">
-        <div class="doc-avatar ${rank}">${medal || ini}</div>
-        <div class="doc-info">
-          <div class="doc-name">${docName(m.nom)}</div>
-          <div class="doc-spec">${m.specialite || ""}</div>
-        </div>
-        <span class="doc-count ${m.rdv_ce_mois > 0 ? "active" : "zero"}">${m.rdv_ce_mois}</span>
-      </div>`;
-      })
-      .join("");
-  } catch (err) {
-    container.innerHTML = '<p style="color:#ef4444;font-size:0.82rem">Erreur</p>';
-  }
+    try {
+        const r = await fetch(API + '/stats');
+        const stats = await r.json();
+        const total = data.length;
+        const planifie = data.filter(c => (c.statut||'').includes('planifi')).length;
+        const annule = data.filter(c => (c.statut||'').includes('annul')).length;
+        animateNumber('st-total', total);
+        animateNumber('st-planifie', planifie);
+        animateNumber('st-annule', annule);
+        if (stats && stats.length) {
+            const sorted = stats.slice().sort((a,b) => (b.nombre_rdv||b.count||0) - (a.nombre_rdv||a.count||0));
+            const top3 = sorted.slice(0, 3);
+            const podium = document.getElementById('podium');
+            const order = [1, 0, 2];
+            podium.innerHTML = order.filter(i => top3[i]).map(i => {
+                const s = top3[i];
+                const rank = i + 1;
+                const name = s.medecin_nom || s.medecin || s.nom || '--';
+                const count = s.nombre_rdv || s.count || 0;
+                return '<div class="podium-item podium-' + rank + '">' +
+                    '<div class="podium-rank">' + rank + '</div>' +
+                    '<div class="podium-name">' + name + '</div>' +
+                    '<div class="podium-count">' + count + '</div>' +
+                    '<div class="podium-label">consultations</div>' +
+                '</div>';
+            }).join('');
+        }
+    } catch(e) { console.error(e); }
 }
 
-// ─── Modals & Form Logic (Personne 3 : Triggers & RBAC) ───
-
-window.openRdvModal = async function() {
-  document.getElementById("rdvModal").classList.add("open");
-  await loadSelectOptions();
-};
-
-window.closeRdvModal = function() {
-  document.getElementById("rdvModal").classList.remove("open");
-};
-
-async function loadSelectOptions() {
-  const patSelect = document.getElementById("rdv-patient");
-  const docSelect = document.getElementById("rdv-medecin");
-
-  try {
-    if (patientsList.length === 0) {
-      const resP = await fetch(`${API}/patients`);
-      patientsList = await resP.json();
-      patSelect.innerHTML = patientsList.map(p => `<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join("");
-    }
-    if (medecinsList.length === 0) {
-      const resM = await fetch(`${API}/medecins`);
-      medecinsList = await resM.json();
-      docSelect.innerHTML = medecinsList.map(m => `<option value="${m.id}">${docName(m.nom)} (${m.specialite})</option>`).join("");
-    }
-  } catch (e) {
-    console.error("Erreur chargement listes", e);
-  }
-
-  // Pré-remplir date par défaut (demain 10h)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(10, 0, 0, 0);
-  const isoLocal = tomorrow.toISOString().slice(0, 16);
-  if (!document.getElementById("rdv-date").value) {
-    document.getElementById("rdv-date").value = isoLocal;
-  }
+async function loadPlayers() {
+    try {
+        const r = await fetch(API + '/patients');
+        const patients = await r.json();
+        const grid = document.getElementById('players-grid');
+        grid.innerHTML = patients.map(p => {
+            const nom = p.nom || '';
+            const prenom = p.prenom || '';
+            const meta = PSG[nom] || { num:'?', pos:'JOU', rating:80 };
+            const initials = (prenom[0]||'') + (nom[0]||'');
+            return '<div class="fifa-card" onmousemove="tilt(event,this)" onmouseleave="untilt(this)">' +
+                '<div class="card-number">' + meta.num + '</div>' +
+                '<div class="card-pos pos-' + meta.pos + '">' + meta.pos + '</div>' +
+                '<div class="card-avatar">' + initials + '</div>' +
+                '<div class="card-name">' + nom + '</div>' +
+                '<div class="card-fullname">' + prenom + ' ' + nom + '</div>' +
+                '<div class="card-rating">' +
+                    '<div class="rating-num">' + meta.rating + '</div>' +
+                    '<div class="rating-label">OVR</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    } catch(e) { console.error(e); }
 }
 
-window.prefillConflictTest = function() {
-  // Sélectionner Dr. House (id 1) et date occupée (2026-10-12 09:00)
-  const docSelect = document.getElementById("rdv-medecin");
-  const dateInput = document.getElementById("rdv-date");
-  docSelect.value = "1";
-  dateInput.value = "2026-10-12T09:00";
-  showToast("⚡ Créneau pré-rempli sur un rendez-vous déjà existant (test du Trigger anti_surreservation)");
-};
+function tilt(e, el) {
+    var r = el.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width - 0.5;
+    var y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = 'translateY(-8px) rotateY(' + (x*15) + 'deg) rotateX(' + (-y*15) + 'deg)';
+}
+function untilt(el) { el.style.transform = ''; }
 
-window.handleCreateRdv = async function(event) {
-  event.preventDefault();
-  const patient_id = parseInt(document.getElementById("rdv-patient").value);
-  const medecin_id = parseInt(document.getElementById("rdv-medecin").value);
-  const rawDate = document.getElementById("rdv-date").value;
-  const date_heure = rawDate.replace("T", " ") + ":00";
+function animateNumber(id, target) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var current = 0;
+    var step = Math.max(1, Math.floor(target / 40));
+    var iv = setInterval(function() {
+        current += step;
+        if (current >= target) { current = target; clearInterval(iv); }
+        el.textContent = current;
+    }, 30);
+}
 
-  try {
-    const res = await fetch(`${API}/consultations`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ patient_id, medecin_id, date_heure })
+async function annuler(id) {
+    try {
+        var r = await fetch(API + '/consultations/' + id + '/annuler', { method:'POST' });
+        var j = await r.json();
+        if (r.ok) { toast('Consultation annulee -- procedure annuler_rdv executee', 'success'); load(); }
+        else toast(j.error || 'Erreur', 'error');
+    } catch(e) { toast('Erreur reseau', 'error'); }
+}
+
+async function switchView(v) {
+    view = v;
+    document.querySelectorAll('.nav-tabs button').forEach(function(b,i) {
+        b.classList.toggle('active', (v==='main'&&i===0)||(v==='secretaire'&&i===1));
+    });
+    if (v === 'secretaire') {
+        try {
+            var r = await fetch(API + '/secretaire/consultations');
+            var d = await r.json();
+            renderTable(d);
+        } catch(e) { toast('Erreur chargement vue secretaire', 'error'); }
+    } else {
+        renderTable(data);
+    }
+}
+
+function openRdvModal() {
+    document.getElementById('modal-rdv').classList.add('open');
+    loadModalSelects();
+}
+function openRbacModal() {
+    document.getElementById('modal-rbac').classList.add('open');
+    testRbac();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function loadModalSelects() {
+    try {
+        var res = await Promise.all([fetch(API+'/patients'), fetch(API+'/medecins')]);
+        var arr = await Promise.all(res.map(function(r){return r.json()}));
+        document.getElementById('sel-patient').innerHTML = arr[0].map(function(p){return '<option value="'+p.id+'">'+p.prenom+' '+p.nom+'</option>'}).join('');
+        document.getElementById('sel-medecin').innerHTML = arr[1].map(function(m){return '<option value="'+m.id+'">'+m.prenom+' '+m.nom+'</option>'}).join('');
+    } catch(e) {}
+}
+
+function prefillConflict() {
+    document.getElementById('sel-medecin').value = 1;
+    document.getElementById('inp-date').value = '2026-10-15T09:00';
+    toast('Pre-rempli pour tester anti_surreservation', 'success');
+}
+
+async function createRdv() {
+    var body = {
+        patient_id: document.getElementById('sel-patient').value,
+        medecin_id: document.getElementById('sel-medecin').value,
+        date_consultation: document.getElementById('inp-date').value
+    };
+    try {
+        var r = await fetch(API+'/consultations', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var j = await r.json();
+        if (r.ok) { toast('Consultation creee avec succes', 'success'); closeModal('modal-rdv'); load(); }
+        else toast(j.error || j.detail || 'Erreur -- trigger anti_surreservation ?', 'error');
+    } catch(e) { toast('Erreur reseau', 'error'); }
+}
+
+async function testRbac() {
+    try {
+        var r = await fetch(API+'/securite/test-rbac');
+        var d = await r.json();
+        var c = document.getElementById('rbac-content');
+        if (Array.isArray(d)) {
+            c.innerHTML = d.map(function(t){
+                var ok = t.acces||t.granted||t.success;
+                return '<div class="rbac-row"><span>'+(t.test||t.description||t.action)+'</span><span class="'+(ok?'rbac-ok':'rbac-no')+'">'+(ok?'Autorise':'Refuse')+'</span></div>';
+            }).join('');
+        } else {
+            c.innerHTML = '<pre style="font-size:12px;color:var(--gray);white-space:pre-wrap">'+JSON.stringify(d,null,2)+'</pre>';
+        }
+    } catch(e) { document.getElementById('rbac-content').innerHTML = '<p style="color:var(--gray)">Erreur de chargement</p>'; }
+}
+
+function toast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast toast-' + type + ' show';
+    setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+
+/* ══════════════════════════════════════════
+   THREE.JS — STADE 3D
+   ══════════════════════════════════════════ */
+function initStadium() {
+    var canvas = document.getElementById('stadium-canvas');
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x070d1a);
+    scene.fog = new THREE.FogExp2(0x070d1a, 0.004);
+
+    var camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 500);
+    var renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+
+    /* --- Materials --- */
+    var fieldMat  = new THREE.MeshStandardMaterial({ color:0x1a7a1a, roughness:0.8 });
+    var blueMat   = new THREE.MeshStandardMaterial({ color:0x003366 });
+    var redMat    = new THREE.MeshStandardMaterial({ color:0xaa2020 });
+    var darkBlue  = new THREE.MeshStandardMaterial({ color:0x002244 });
+    var darkRed   = new THREE.MeshStandardMaterial({ color:0x881818 });
+    var grayMat   = new THREE.MeshStandardMaterial({ color:0x555555 });
+    var whiteMat  = new THREE.MeshBasicMaterial({ color:0xffffff, side:THREE.DoubleSide });
+    var glowMat   = new THREE.MeshStandardMaterial({ color:0xffffcc, emissive:0xffffaa, emissiveIntensity:0.8 });
+
+    /* --- Field --- */
+    var field = new THREE.Mesh(new THREE.PlaneGeometry(105, 68), fieldMat);
+    field.rotation.x = -Math.PI/2;
+    field.receiveShadow = true;
+    scene.add(field);
+
+    /* --- Field markings --- */
+    var cl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 68), whiteMat);
+    cl.rotation.x = -Math.PI/2; cl.position.y = 0.05;
+    scene.add(cl);
+
+    var ring = new THREE.Mesh(new THREE.RingGeometry(8.5, 9, 64), whiteMat);
+    ring.rotation.x = -Math.PI/2; ring.position.y = 0.05;
+    scene.add(ring);
+
+    /* penalty areas */
+    var pa1 = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 40), whiteMat);
+    pa1.rotation.x=-Math.PI/2; pa1.position.set(-36, 0.05, 0); scene.add(pa1);
+    var pa2 = pa1.clone(); pa2.position.set(36, 0.05, 0); scene.add(pa2);
+    var pa3 = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 0.3), whiteMat);
+    pa3.rotation.x=-Math.PI/2; pa3.position.set(-44.25, 0.05, 20); scene.add(pa3);
+    var pa4 = pa3.clone(); pa4.position.set(-44.25, 0.05, -20); scene.add(pa4);
+    var pa5 = pa3.clone(); pa5.position.set(44.25, 0.05, 20); scene.add(pa5);
+    var pa6 = pa3.clone(); pa6.position.set(44.25, 0.05, -20); scene.add(pa6);
+
+    /* --- Stands (lower tier) --- */
+    var sn = new THREE.Mesh(new THREE.BoxGeometry(115, 16, 20), blueMat);
+    sn.position.set(0, 8, -44); scene.add(sn);
+    var ss = new THREE.Mesh(new THREE.BoxGeometry(115, 16, 20), redMat);
+    ss.position.set(0, 8, 44); scene.add(ss);
+    var sw = new THREE.Mesh(new THREE.BoxGeometry(20, 14, 108), blueMat);
+    sw.position.set(-62.5, 7, 0); scene.add(sw);
+    var se = new THREE.Mesh(new THREE.BoxGeometry(20, 14, 108), redMat);
+    se.position.set(62.5, 7, 0); scene.add(se);
+
+    /* --- Stands (upper tier) --- */
+    var un = new THREE.Mesh(new THREE.BoxGeometry(112, 10, 14), darkBlue);
+    un.position.set(0, 21, -47); scene.add(un);
+    var us = new THREE.Mesh(new THREE.BoxGeometry(112, 10, 14), darkRed);
+    us.position.set(0, 21, 47); scene.add(us);
+    var uw = new THREE.Mesh(new THREE.BoxGeometry(14, 9, 100), darkBlue);
+    uw.position.set(-65, 18.5, 0); scene.add(uw);
+    var ue = new THREE.Mesh(new THREE.BoxGeometry(14, 9, 100), darkRed);
+    ue.position.set(65, 18.5, 0); scene.add(ue);
+
+    /* --- Floodlights --- */
+    var floodPositions = [[-60,-48],[60,-48],[-60,48],[60,48]];
+    floodPositions.forEach(function(pos) {
+        var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 45), grayMat);
+        pole.position.set(pos[0], 22.5, pos[1]);
+        scene.add(pole);
+        var fix = new THREE.Mesh(new THREE.BoxGeometry(5, 2.5, 4), glowMat);
+        fix.position.set(pos[0], 46, pos[1]);
+        scene.add(fix);
+        var sl = new THREE.SpotLight(0xffeedd, 0.5, 200, Math.PI/4, 0.5);
+        sl.position.set(pos[0], 45, pos[1]);
+        sl.target = field;
+        scene.add(sl);
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      showToast("✓ Rendez-vous programmé avec succès !");
-      closeRdvModal();
-      loadConsultations();
-      loadStats();
-    } else {
-      // Afficher le message d'exception levé par le trigger PostgreSQL
-      alert(`🛡️ Rejeté par la Base de Données (Trigger anti_surreservation) :\n\n${data.error}`);
+    /* --- Lighting --- */
+    scene.add(new THREE.AmbientLight(0x303050, 0.4));
+    scene.add(new THREE.HemisphereLight(0x4060a0, 0x101020, 0.4));
+
+    /* --- Stars --- */
+    var starGeo = new THREE.BufferGeometry();
+    var starPos = [];
+    for (var i = 0; i < 600; i++) {
+        starPos.push((Math.random()-0.5)*500, Math.random()*120+40, (Math.random()-0.5)*500);
     }
-  } catch (err) {
-    alert("Erreur de communication avec le serveur");
-  }
-};
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xffffff, size:0.35 })));
 
-window.openRbacModal = async function() {
-  const modal = document.getElementById("rbacModal");
-  const body = document.getElementById("rbacModalBody");
-  modal.classList.add("open");
-  body.innerHTML = '<div class="loading">Exécution des requêtes SQL de vérification RBAC…</div>';
+    /* --- Camera orbit --- */
+    var angle = 0;
+    camera.position.set(90, 45, 90);
+    camera.lookAt(0, 0, 0);
 
-  try {
-    const res = await fetch(`${API}/securite/test-rbac`);
-    const data = await res.json();
+    function animate() {
+        requestAnimationFrame(animate);
+        angle += 0.0012;
+        camera.position.x = 110 * Math.cos(angle);
+        camera.position.z = 110 * Math.sin(angle);
+        camera.position.y = 38 + 14 * Math.sin(angle * 0.35);
+        camera.lookAt(0, 3, 0);
+        renderer.render(scene, camera);
+    }
+    animate();
 
-    body.innerHTML = `
-      <div style="font-size:0.8rem;color:#64748b;margin-bottom:0.75rem;">
-        Connexion test exécutée sous l'utilisateur PostgreSQL : <strong>${data.utilisateur}</strong> (Rôle : <code>${data.role}</code>)
-      </div>
-      ${data.tests.map(t => `
-        <div class="rbac-card ${t.autorise ? 'success' : 'blocked'}">
-          <div class="rbac-title">
-            ${t.autorise ? '✅ ACCÈS AUTORISÉ' : '🛑 ACCÈS BLOQUÉ (SÉCURITÉ CONFIRMÉE)'} — <code>${t.cible}</code>
-          </div>
-          <div class="rbac-desc">${t.resultat}</div>
-        </div>
-      `).join("")}
-      <div style="font-size:0.72rem;color:#64748b;line-height:1.4;margin-top:0.75rem;">
-        💡 <em>Le rôle secrétaire dispose du droit de lecture sur la vue dédiée <code>vue_secretaire</code> (GRANT SELECT), mais les accès directs aux tables sensibles comme <code>patients</code> sont rigoureusement interdits.</em>
-      </div>
-    `;
-  } catch (err) {
-    body.innerHTML = '<div class="empty"><p>Erreur lors du test RBAC</p></div>';
-  }
-};
+    window.addEventListener('resize', function() {
+        var nw = canvas.clientWidth, nh = canvas.clientHeight;
+        camera.aspect = nw/nh;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+    });
+}
 
-window.closeRbacModal = function() {
-  document.getElementById("rbacModal").classList.remove("open");
-};
+/* ══════════════════════════════════════════
+   PARTICLES (golden floating dots)
+   ══════════════════════════════════════════ */
+function initParticles() {
+    var canvas = document.getElementById('particles-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var w, h;
+    var particles = [];
 
-// ─── Init ───
-loadConsultations();
-loadStats();
+    function resize() {
+        w = canvas.width = canvas.clientWidth;
+        h = canvas.height = canvas.clientHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
+    for (var i = 0; i < 50; i++) {
+        particles.push({
+            x: Math.random()*w, y: Math.random()*h,
+            vx: (Math.random()-0.5)*0.3, vy: -Math.random()*0.4 - 0.1,
+            r: Math.random()*2 + 0.5,
+            a: Math.random()*0.35 + 0.08
+        });
+    }
+
+    function draw() {
+        requestAnimationFrame(draw);
+        ctx.clearRect(0, 0, w, h);
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(212,168,67,' + p.a + ')';
+            ctx.fill();
+            p.x += p.vx; p.y += p.vy;
+            if (p.y < -10) { p.y = h+10; p.x = Math.random()*w; }
+            if (p.x < -10 || p.x > w+10) p.x = Math.random()*w;
+        }
+    }
+    draw();
+}
+
+/* ══════════════════════════════════════════
+   SCROLL REVEAL
+   ══════════════════════════════════════════ */
+function initScrollReveal() {
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+}

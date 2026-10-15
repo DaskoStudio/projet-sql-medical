@@ -1,5 +1,8 @@
---nombre de rendez-vous non annulés d'un médecin sur un mois.
--- p_mois = le 1er jour du mois, ex : SELECT calculer_rdv_mois(42, '2026-12-01');
+-- ═══════════════════════════════════════════════════════════
+-- PSG MEDICAL HUB — Fonction statistiques
+-- Nombre de rendez-vous non annulés d'un médecin sur un mois.
+-- Exemple : SELECT calculer_rdv_mois(1, '2026-10-01');
+-- ═══════════════════════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION calculer_rdv_mois(p_medecin_id int, p_mois date)
 RETURNS bigint
