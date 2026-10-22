@@ -1,130 +1,139 @@
-# ⚽ PSG Medical Hub
+# PSG Medical Hub
 
-**Le sujet :** la base de données du centre médical du Paris Saint-Germain, sur le modèle de Doctolib. Elle relie les cabinets (Campus PSG de Poissy, infirmerie du Parc des Princes), le staff médical, les joueurs et leurs consultations.
-**Le but :** prendre, afficher et annuler des rendez-vous sans jamais réserver deux fois le même créneau, protéger les données médicales des joueurs et rester rapide avec un million de consultations.
+> The database of a football club's medical centre, modelled on a Doctolib-style booking system: clinics, medical staff, players and consultations — with double-booking protection, role-based access and measured query performance on one million rows.
 
-Projet de groupe · SQL avancé · Bachelor 2 · Ynov Campus · PostgreSQL 16
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=nodedotjs&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Type](https://img.shields.io/badge/type-group%20project-38f0c0?style=flat-square)
+
+**Subject.** The medical centre of a professional football club (Campus PSG in Poissy, infirmary at the Parc des Princes) links clinics, medical staff, players and consultations.
+**Goal.** Book, display and cancel appointments without ever booking the same slot twice, protect players' medical data, and stay fast with a million consultations.
+
+Group project · advanced SQL · PostgreSQL 16. All data is demo data.
 
 ---
 
-## 🗂️ Le modèle : 4 tables
+## Table of contents
 
-| Table | Une ligne, c'est | Liens |
+- [Data model](#data-model)
+- [Getting started](#getting-started)
+- [What the database contains](#what-the-database-contains)
+- [Team](#team)
+- [Project structure](#project-structure)
+
+## Data model
+
+Four tables:
+
+| Table | One row is… | Links |
 |---|---|---|
-| `cabinets` | un lieu de soin (Campus PSG Poissy, Parc des Princes) | |
-| `medecins` | un membre du staff médical (Dr. Orhant, Dr. Galland, Dr. Ferret…) | → `cabinets` |
-| `patients` | un joueur (Dembélé, Hakimi, Donnarumma, Marquinhos, Vitinha…) | |
-| `consultations` | un rendez-vous : médecin, joueur, date et heure, statut | → `medecins`, → `patients` |
+| `cabinets` | a care location (Campus PSG Poissy, Parc des Princes) | |
+| `medecins` | a member of the medical staff | → `cabinets` |
+| `patients` | a player | |
+| `consultations` | an appointment: doctor, player, date and time, status | → `medecins`, → `patients` |
 
----
+## Getting started
 
-## 🚀 Lancer le projet
-
-Il faut **Docker Desktop** (lancé) et **Node.js 18+**.
+You need **Docker Desktop** (running) and **Node.js 18+**.
 
 ```bash
-# 1. La base : les scripts de db/ s'exécutent automatiquement dans l'ordre (environ 15 s)
+# 1. The database: scripts in db/ run automatically in order (about 15 s)
 docker compose up -d
 
-# 2. Le serveur (laisser ce terminal ouvert)
+# 2. The server (keep this terminal open)
 cd backend
 npm install
 node index.js
 ```
 
-Ouvrir ensuite **http://localhost:3001**. Le backend sert aussi l'interface.
+Then open **http://localhost:3001** — the backend also serves the web interface.
 
-| Paramètre | Valeur |
+| Setting | Value |
 |---|---|
-| Base | `cabinet_medical`, sur le port `5433` |
-| Utilisateur | `admin` / `password` |
-| Console SQL | `docker compose exec db psql -U admin -d cabinet_medical` |
-| Repartir de zéro | `docker compose down -v`, puis `docker compose up -d` |
+| Database | `cabinet_medical` on port `5433` |
+| Local credentials | `admin` / `password` (local development only) |
+| SQL console | `docker compose exec db psql -U admin -d cabinet_medical` |
+| Start from scratch | `docker compose down -v`, then `docker compose up -d` |
 
 ---
 
-## 🧩 Ce que contient la base
+## What the database contains
 
-### 1. La procédure `annuler_rdv`
-- **Ce qu'elle fait :** elle passe une consultation au statut « annulé ». Si l'identifiant n'existe pas, elle refuse avec un message clair.
-- **Pourquoi elle est là :** l'annulation s'écrit une seule fois, dans la base. Le site (bouton « Annuler ») et la console SQL appliquent donc exactement la même règle.
-- **La preuve :** après `CALL annuler_rdv(1);`, le statut de la consultation 1 vaut `annulé`. `CALL annuler_rdv(9999999);` affiche `ERROR: La consultation 9999999 n'existe pas`.
+### 1. Procedure `annuler_rdv`
+- **What it does:** sets a consultation's status to "cancelled". If the id does not exist, it refuses with a clear message.
+- **Why it exists:** cancellation is written once, in the database, so the website's "Cancel" button and the SQL console apply exactly the same rule.
+- **Proof:** after `CALL annuler_rdv(1);` consultation 1 has status `annulé`. `CALL annuler_rdv(9999999);` prints `ERROR: La consultation 9999999 n'existe pas`.
 
-### 2. La fonction `calculer_rdv_mois`
-- **Ce qu'elle fait :** elle compte les rendez-vous non annulés d'un médecin sur un mois donné.
-- **Pourquoi elle est là :** la page statistiques du site l'appelle pour chaque membre du staff. Le calcul est identique partout et n'est jamais réécrit dans l'application.
-- **La preuve :** `SELECT calculer_rdv_mois(42, '2026-11-01');` renvoie 600. Après l'annulation d'un de ces rendez-vous avec `annuler_rdv`, elle renvoie 599.
+### 2. Function `calculer_rdv_mois`
+- **What it does:** counts a doctor's non-cancelled appointments for a given month.
+- **Why it exists:** the statistics page calls it for each staff member; the computation is identical everywhere and never rewritten in the application.
+- **Proof:** `SELECT calculer_rdv_mois(42, '2026-11-01');` returns 600. After cancelling one of those appointments with `annuler_rdv`, it returns 599.
 
-### 3. Le trigger `anti_surreservation`
-- **Ce qu'il fait :** avant chaque nouveau rendez-vous (`BEFORE INSERT`), il vérifie que le médecin n'a pas déjà un rendez-vous non annulé à la même heure. Si c'est le cas, il refuse l'insertion.
-- **Pourquoi dans la base plutôt que dans l'application :** une double réservation doit être impossible quel que soit le chemin emprunté (site, API, console SQL, futur outil). Si la règle n'existait que dans le code du site, il suffirait d'un oubli ou d'un autre programme pour la contourner. Dans la base, elle s'applique à tout le monde, sans exception.
-- **La preuve :** réserver le Dr. Orhant le 15/10 à 9 h, alors que Dembélé occupe déjà ce créneau, affiche `ERROR: Le médecin 1 a déjà un rendez-vous à cette heure — créneau refusé par le trigger anti_surreservation`. Après l'annulation du rendez-vous de Dembélé, la même réservation passe.
+### 3. Trigger `anti_surreservation`
+- **What it does:** before every new appointment (`BEFORE INSERT`) it checks that the doctor has no other non-cancelled appointment at the same time, and rejects the insert if so.
+- **Why in the database rather than the application:** a double booking must be impossible whatever the path — website, API, SQL console, a future tool. A rule that only lived in the site's code could be bypassed by a mistake or by another program. In the database, it applies to everyone.
+- **Proof:** booking a doctor at a slot already taken prints `ERROR: Le médecin 1 a déjà un rendez-vous à cette heure — créneau refusé par le trigger anti_surreservation`. After cancelling the existing appointment, the same booking succeeds.
 
-### 4. Les rôles
-- **Ce qu'ils font :** deux rôles-métiers reçoivent les droits, `role_secretaire` et `role_medecin`. Deux utilisateurs en héritent, `secretaire_demo` et `medecin_demo`. Aucun des deux n'a de droit sur les tables, seulement sur sa vue.
-- **Pourquoi ils sont là :** c'est le principe du moindre privilège. Chaque compte ne voit que ce dont il a besoin. Les droits sont donnés aux rôles et non aux personnes : si une secrétaire quitte le club, on supprime son compte sans toucher aux droits du rôle.
-- **La preuve :** après `SET ROLE secretaire_demo;`, la lecture de `vue_secretaire` est **autorisée** et `SELECT numero_secu FROM patients;` est **refusée** (`permission denied for table patients`). Après `SET ROLE medecin_demo;`, un `UPDATE` sur `consultations` est **refusé**. Le même test est accessible depuis le site (`/api/securite/test-rbac`).
+### 4. Roles
+- **What they do:** two business roles receive privileges, `role_secretaire` and `role_medecin`; two users inherit them, `secretaire_demo` and `medecin_demo`. Neither has any right on the tables — only on its own view.
+- **Why:** least privilege. Each account sees only what it needs, and rights are granted to roles rather than people: when a secretary leaves, you drop the account without touching the role.
+- **Proof:** after `SET ROLE secretaire_demo;`, reading `vue_secretaire` is **allowed** and `SELECT numero_secu FROM patients;` is **denied** (`permission denied for table patients`). After `SET ROLE medecin_demo;`, an `UPDATE` on `consultations` is **denied**. The same test is available from the site (`/api/securite/test-rbac`).
 
-### 5. Les vues
-- **Ce qu'elles font :**
-  - `vue_secretaire` montre le planning (joueur, téléphone, médecin, cabinet, ville, date, statut).
-  - `vue_medecin` montre les consultations avec le joueur et son téléphone.
-- **Pourquoi elles sont là :** elles **cachent le numéro de Sécurité sociale des joueurs** et évitent à l'utilisateur d'écrire les jointures. Le droit est donné sur la vue, jamais sur la table : sinon la vue ne protégerait rien.
-- **La preuve :** en tant que `secretaire_demo`, `SELECT * FROM vue_secretaire LIMIT 2;` affiche « Ousmane Dembélé · Dr. Orhant · 15/10 9 h », sans aucune colonne `numero_secu`. La lecture directe de `patients` est refusée.
+### 5. Views
+- **What they do:** `vue_secretaire` shows the schedule (player, phone, doctor, clinic, city, date, status); `vue_medecin` shows consultations with the player and phone number.
+- **Why:** they **hide players' social-security numbers** and spare users from writing joins. The privilege is granted on the view, never on the table — otherwise the view would protect nothing.
+- **Proof:** as `secretaire_demo`, `SELECT * FROM vue_secretaire LIMIT 2;` returns the schedule without any `numero_secu` column; reading `patients` directly is denied.
 
-### 6. Les données
-- **Ce qu'elles font :** 8 joueurs et 3 médecins réels saisis à la main, plus un jeu généré avec `generate_series` : **200 membres du staff, 10 000 patients et 1 000 000 de consultations**. Il y a 20 créneaux de 30 min par jour (8 h - 18 h) à partir du 17 octobre, sans aucun doublon.
-- **Pourquoi elles sont là :** avec quelques lignes, PostgreSQL lit toujours toute la table, et un index ne prouve rien. Avec un million de lignes, on mesure vraiment si le site reste rapide.
-- **La preuve :** `SELECT count(*) FROM consultations;` renvoie un peu plus d'un million de lignes.
+### 6. Data
+- **What it is:** a few players and doctors entered by hand, plus a generated dataset built with `generate_series`: **200 staff members, 10,000 patients and 1,000,000 consultations**, with 20 half-hour slots a day (8:00–18:00) and no duplicates.
+- **Why:** with a few rows PostgreSQL always reads the whole table and an index proves nothing. With a million rows you can really measure whether the site stays fast.
+- **Proof:** `SELECT count(*) FROM consultations;` returns a little over one million rows.
 
-### 7. Les index
-Toutes les mesures sont faites avec `EXPLAIN ANALYZE`, sur les vraies requêtes du site (`analyse/benchmark_index.sql`).
+### 7. Indexes
+All measurements use `EXPLAIN ANALYZE` on the site's real queries (`analyse/benchmark_index.sql`).
 
-**Index 1 : `consultations (date_heure)`**
-- **Ce qu'il fait :** il accélère la page d'accueil, qui affiche les 100 prochains rendez-vous triés par date.
-- **Pourquoi il est là :** sans index, PostgreSQL lit et trie un million de lignes pour en garder 100. L'index est déjà trié : il lit les 100 premières entrées et s'arrête.
-- **La preuve :** avant, Seq Scan, **82 ms**. Après, Index Scan, **0,13 ms**.
+**Index 1 — `consultations (date_heure)`**
+- **What it does:** speeds up the home page, which lists the next 100 appointments sorted by date.
+- **Why:** without an index PostgreSQL reads and sorts a million rows to keep 100. The index is already sorted: it reads the first 100 entries and stops.
+- **Proof:** before, Seq Scan, **82 ms**. After, Index Scan, **0.13 ms**.
 
-**Index 2 : `consultations (medecin_id, date_heure)`**
-- **Ce qu'il fait :** il accélère `calculer_rdv_mois`, donc la page statistiques, et le trigger anti-surréservation, qui filtrent tous sur le médecin puis sur la date.
-- **Pourquoi il est là :** `medecin_id` est une clé étrangère, et PostgreSQL ne l'indexe pas tout seul. L'ordre des colonnes suit le filtre : d'abord l'égalité (un médecin), puis l'intervalle (une période).
-- **La preuve :**
-  - Pour un médecin sur un mois : avant, Seq Scan, **11 ms** ; après, Index Only Scan, **0,06 ms**.
-  - Pour la page statistiques (200 médecins) : **6 s avant, 27 ms après**, soit environ 200 fois plus rapide.
+**Index 2 — `consultations (medecin_id, date_heure)`**
+- **What it does:** speeds up `calculer_rdv_mois` (and therefore the statistics page) and the anti-double-booking trigger, which both filter on the doctor and then on the date.
+- **Why:** `medecin_id` is a foreign key and PostgreSQL does not index it automatically. Column order follows the filter: equality first (one doctor), then range (a period).
+- **Proof:**
+  - One doctor, one month: Seq Scan **11 ms** → Index Only Scan **0.06 ms**.
+  - Statistics page (200 doctors): **6 s → 27 ms**, roughly 200× faster.
 
-**Le coût :** les deux index occupent environ 7 Mo et 30 Mo, et chaque nouveau rendez-vous doit les mettre à jour. On consulte un planning bien plus souvent qu'on ne réserve : le compromis est rentable.
-**Un index écarté :** `medecins (nom)`. La table n'a que 200 lignes, et PostgreSQL continue de la lire en entier.
+**The cost:** the two indexes take about 7 MB and 30 MB, and every new appointment must update them. A schedule is read far more often than it is written, so the trade-off pays off.
+**An index rejected:** `medecins (nom)` — the table has only 200 rows and PostgreSQL still reads it whole.
 
 ---
 
-## 👥 Répartition du travail
+## Team
 
-| Partie | Responsable | Fichiers |
-|---|---|---|
-| Schéma, données de démo, procédure, backend et interface | *(à compléter)* | `01_schema.sql`, `02_donnees.sql`, `03_procedures.sql`, `backend/`, `frontend/` |
-| Données de volume, fonction statistiques, index et benchmark | **Melek** | `02_donnees_volume.sql`, `03_fonction_stats.sql`, `09_index.sql`, `analyse/` |
-| Trigger, rôles et vues | *(à compléter)* | `04_securite.sql` |
+Group project. The volume data, statistics function, indexes and benchmark were written by **Melek**; the rest was built by the team. The Git history shows who did what — each member committed their own work.
 
-L'historique Git montre qui a fait quoi : chaque membre a commité son propre travail.
-
----
-
-## 📂 Structure
+## Project structure
 
 ```text
 projet-sql-medical/
 ├── docker-compose.yml          PostgreSQL 16 (port 5433)
-├── db/                         exécutés dans l'ordre au premier démarrage
-│   ├── 01_schema.sql           les 4 tables
-│   ├── 02_donnees.sql          joueurs, staff et cabinets du PSG
-│   ├── 02_donnees_volume.sql   1 000 000 de consultations générées
+├── db/                         run in order on first start
+│   ├── 01_schema.sql           the 4 tables
+│   ├── 02_donnees.sql          demo players, staff and clinics
+│   ├── 02_donnees_volume.sql   1,000,000 generated consultations
 │   ├── 03_fonction_stats.sql   calculer_rdv_mois
 │   ├── 03_procedures.sql       annuler_rdv
-│   ├── 04_securite.sql         trigger, rôles et vues
-│   └── 09_index.sql            les 2 index
+│   ├── 04_securite.sql         trigger, roles and views
+│   └── 09_index.sql            the 2 indexes
 ├── analyse/
-│   ├── benchmark_index.sql     mesures avant / après chaque index
-│   └── README.md               détail des mesures
-├── backend/                    API Node.js / Express
-└── frontend/                   interface web
+│   ├── benchmark_index.sql     before / after measurements
+│   └── README.md               measurement details
+├── backend/                    Node.js / Express API
+└── frontend/                   web interface
 ```
+
+---
+
+**Author** — Konaté Adama · [github.com/DaskoStudio](https://github.com/DaskoStudio)
