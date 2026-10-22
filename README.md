@@ -1,28 +1,28 @@
-# PSG Medical Hub
+<div align="center">
 
-> The database of a football club's medical centre, modelled on a Doctolib-style booking system: clinics, medical staff, players and consultations — with double-booking protection, role-based access and measured query performance on one million rows.
+<img src="./.github/banner.svg" alt="PSG Medical Hub" width="100%">
 
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=nodedotjs&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Type](https://img.shields.io/badge/type-group%20project-38f0c0?style=flat-square)
+**The database of a football club's medical centre, modelled on a Doctolib-style booking system: clinics, medical staff, players and consultations — with double-booking protection, role-based access and measured query performance on one million rows.**
+
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white) ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=nodedotjs&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white) ![Type](https://img.shields.io/badge/type-group%20project-38f0c0?style=flat-square)
+
+[Data model](#-data-model) · [Getting started](#-getting-started)
+
+</div>
 
 **Subject.** The medical centre of a professional football club (Campus PSG in Poissy, infirmary at the Parc des Princes) links clinics, medical staff, players and consultations.
 **Goal.** Book, display and cancel appointments without ever booking the same slot twice, protect players' medical data, and stay fast with a million consultations.
 
 Group project · advanced SQL · PostgreSQL 16. All data is demo data.
 
----
+## 🗃️ Data model
 
-## Table of contents
-
-- [Data model](#data-model)
-- [Getting started](#getting-started)
-- [What the database contains](#what-the-database-contains)
-- [Team](#team)
-- [Project structure](#project-structure)
-
-## Data model
+```mermaid
+erDiagram
+    CABINETS ||--o{ MEDECINS : employs
+    MEDECINS ||--o{ CONSULTATIONS : performs
+    PATIENTS ||--o{ CONSULTATIONS : attends
+```
 
 Four tables:
 
@@ -33,7 +33,7 @@ Four tables:
 | `patients` | a player | |
 | `consultations` | an appointment: doctor, player, date and time, status | → `medecins`, → `patients` |
 
-## Getting started
+## 🚀 Getting started
 
 You need **Docker Desktop** (running) and **Node.js 18+**.
 
@@ -58,7 +58,7 @@ Then open **http://localhost:3001** — the backend also serves the web interfac
 
 ---
 
-## What the database contains
+## 🧩 What the database contains
 
 ### 1. Procedure `annuler_rdv`
 - **What it does:** sets a consultation's status to "cancelled". If the id does not exist, it refuses with a clear message.
@@ -110,11 +110,11 @@ All measurements use `EXPLAIN ANALYZE` on the site's real queries (`analyse/benc
 
 ---
 
-## Team
+## 👥 Team
 
 Group project. The volume data, statistics function, indexes and benchmark were written by **Melek**; the rest was built by the team. The Git history shows who did what — each member committed their own work.
 
-## Project structure
+## 🗂️ Project structure
 
 ```text
 projet-sql-medical/
@@ -136,4 +136,8 @@ projet-sql-medical/
 
 ---
 
-**Author** — Konaté Adama · [github.com/DaskoStudio](https://github.com/DaskoStudio)
+<div align="center">
+
+<sub>Built by <a href="https://github.com/DaskoStudio"><b>Konaté Adama</b></a> · <a href="https://github.com/DaskoStudio?tab=repositories">More projects</a></sub>
+
+</div>
